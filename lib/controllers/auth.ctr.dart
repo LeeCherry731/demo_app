@@ -67,7 +67,6 @@ class AuthCtr extends GetxService {
       final urlDownload = await snapshot.ref.getDownloadURL();
       logger.i(urlDownload);
 
-      // docUser.doc(userModel.value.id).update({"picture": urlDownload});
       auth.currentUser?.updatePhotoURL(urlDownload);
     } catch (e) {
       logger.e(e.toString());

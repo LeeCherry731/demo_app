@@ -41,6 +41,7 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       navigatorObservers: [FlutterSmartDialog.observer],
+      builder: FlutterSmartDialog.init(),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:demo_app/controllers/ctr.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -15,15 +18,22 @@ class _AuthPageState extends State<AuthPage> {
   AuthPageState state = AuthPageState.signIn;
   bool showPassword = false;
   bool showPasswordConfirm = false;
+  final emailCtr = TextEditingController();
+  final passwordCtr = TextEditingController();
+  PlatformFile? pickedFile;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 50),
             child: Form(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +41,7 @@ class _AuthPageState extends State<AuthPage> {
                   Align(
                     alignment: Alignment.center,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 30),
+                      padding: const EdgeInsets.symmetric(vertical: 60),
                       child: Image.asset(
                         "assets/icons/auth_logo.png",
                       ),
@@ -113,33 +123,70 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: TextFormField(),
+                          child: TextFormField(
+                            decoration: const InputDecoration(
+                              hintStyle: TextStyle(color: Color(0xFFD5D5D5)),
+                              hintText: "ชื่อ - นามสกุล",
+                            ),
+                          ),
                         ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(vertical: 5),
-                          height: 150,
-                          width: double.maxFinite,
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFF9F9F9),
-                              borderRadius: BorderRadius.circular(10)),
-                          child: const Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                        if (pickedFile != null)
+                          Stack(
                             children: [
-                              Icon(
-                                Icons.add_a_photo_outlined,
-                                color: Color(0xFFD5D5D5),
-                                size: 30,
-                              ),
-                              Text(
-                                "อัพโหลดภาพถ่ายประจำตัว",
-                                style: TextStyle(
-                                  color: Color(0xFFD5D5D5),
-                                  fontSize: 12,
+                              Image.file(File(pickedFile!.path!)),
+                              Positioned(
+                                top: 5,
+                                right: 5,
+                                child: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      pickedFile = null;
+                                    });
+                                  },
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Color.fromARGB(255, 255, 97, 85),
+                                    size: 35,
+                                  ),
                                 ),
                               ),
                             ],
-                          ),
-                        )
+                          )
+                        else
+                          InkWell(
+                            onTap: () async {
+                              final pic = await FilePicker.platform.pickFiles();
+                              if (pic == null) return;
+                              setState(() {
+                                pickedFile = pic.files.first;
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(vertical: 5),
+                              height: 150,
+                              width: double.maxFinite,
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFFF9F9F9),
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_a_photo_outlined,
+                                    color: Color(0xFFD5D5D5),
+                                    size: 30,
+                                  ),
+                                  Text(
+                                    "อัพโหลดภาพถ่ายประจำตัว",
+                                    style: TextStyle(
+                                      color: Color(0xFFD5D5D5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
                       ],
                     ),
                   Padding(
@@ -151,8 +198,23 @@ class _AuthPageState extends State<AuthPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           fixedSize: const Size.fromWidth(double.maxFinite)),
-                      onPressed: () {
-                        // authCtr.login(email: email, password: password)
+                      onPressed: () async {
+                        if (state == AuthPageState.register) {
+                          authCtr.login(
+                            email: emailCtr.text.trim(),
+                            password: passwordCtr.text.trim(),
+                          );
+                        } else {
+                          if (pickedFile == null) {
+                            return;
+                          }
+
+                          await authCtr.registor(
+                            email: emailCtr.text.trim(),
+                            password: passwordCtr.text.trim(),
+                            platformFile: pickedFile!,
+                          );
+                        }
                       },
                       child: Text(
                         state == AuthPageState.signIn
@@ -189,7 +251,8 @@ class _AuthPageState extends State<AuthPage> {
                               ),
                       ),
                     ],
-                  )
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
